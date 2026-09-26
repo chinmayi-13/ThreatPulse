@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reports · ThreatPulse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .report-layout { grid-template-columns: 1fr 1.5fr; align-items: start; }
+  @media (max-width: 980px) { .report-layout { grid-template-columns: 1fr; } }
+
+  .report-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .report-item:hover { background: var(--panel-raised); }
+  .report-item.active { background: var(--accent-bg); border-color: var(--accent-dim); }
+  .report-item-icon { width: 30px; height: 30px; border-radius: 6px; background: var(--panel-raised); display:flex; align-items:center; justify-content:center; color: var(--text-dim); flex-shrink:0; }
+  .report-item.active .report-item-icon { color: var(--accent); }
+  .report-item-title { font-size: 13px; }
+  .report-item-sub { font-size: 11px; color: var(--text-faint); margin-top:1px; }
+
+  .doc-preview {
+    background: #F7F4EC;
+    color: #1B1A17;
+    border-radius: var(--radius);
+    padding: 40px 42px;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .doc-preview h2 { font-family: 'Space Grotesk', sans-serif; font-size: 19px; color: #1B1A17; margin-bottom: 4px; }
+  .doc-sub { font-size: 12px; color: #6B6656; margin-bottom: 22px; }
+  .doc-section-title { font-size: 12px; text-transform: none; color: #0F766E; font-weight: 600; margin: 22px 0 10px; border-bottom: 1px solid #E4DFCE; padding-bottom: 6px; }
+  .doc-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .doc-table th { text-align:left; color: #6B6656; font-weight: 500; padding: 6px 8px; border-bottom: 1px solid #E4DFCE; }
+  .doc-table td { padding: 7px 8px; border-bottom: 1px solid #EDE9DB; }
+  .doc-summary-grid { display:grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 6px; }
+  .doc-stat { text-align:center; }
+  .doc-stat .n { font-family: 'Space Grotesk', sans-serif; font-size: 22px; }
+  .doc-stat .l { font-size: 10.5px; color: #6B6656; margin-top: 2px; }
+  .doc-foot { margin-top: 26px; font-size: 11px; color: #9A947F; border-top: 1px solid #E4DFCE; padding-top: 12px; }
+
+  @media print {
+    .sidebar, .topbar, .report-list-panel, .report-actions { display: none !important; }
+    body { background: #fff; }
+    .doc-preview { padding: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <div class="brand-name">ThreatPulse</div>
+        <div class="brand-sub">SOC Console</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+      <a href="upload.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>Upload &amp; Analyze</a>
+      <a href="incident-history.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Incident History</a>
+      <a href="report.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M9 12h6M9 16h6M9 8h2"/></svg>Reports</a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="analyst">
+        <div class="avatar" id="avatarInitial">A</div>
+        <div>
+          <div class="analyst-name" id="analystNameLabel">Analyst</div>
+          <div class="analyst-role">Tier 2 · SOC</div>
+        </div>
+      </div>
+      
+      <a class="logout-link" href="login.html">Sign out</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">Reports</h1>
+        <div class="page-sub">Auto-generated incident reports, ready to export as PDF.</div>
+      </div>
+      <div class="report-actions" style="display:flex; gap:10px;">
+        <button class="btn btn-secondary" id="newReportBtn">Generate new report</button>
+        <button class="btn btn-primary" id="downloadBtn">Download PDF</button>
+      </div>
+    </div>
+
+    <div class="grid report-layout">
+      <div class="panel report-list-panel">
+        <div class="panel-title">Past reports</div>
+        <div id="reportList"></div>
+      </div>
+
+      <div class="doc-preview" id="docPreview">
+        <!-- populated by script -->
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="js/common.js"></script>
+<script>
+  const analystId = sessionStorage.getItem('vantage_analyst') || 'j.alvarez';
+  document.getElementById('analystNameLabel').textContent = analystId;
+  document.getElementById('avatarInitial').textContent = analystId.charAt(0).toUpperCase();
+
+  // TODO(API): GET /api/reports — list of previously generated PDF reports
+  function buildReportList(count = 6) {
+    const list = [];
+    for (let i = 0; i < count; i++) {
+      const d = new Date(Date.now() - i * 7 * 86400000);
+      list.push({
+        id: `RPT-${2026 - (i > 3 ? 1 : 0)}-${String(38 - i).padStart(2, '0')}`,
+        label: `Weekly incident summary`,
+        range: d,
+      });
+    }
+    return list;
+  }
+  const reports = buildReportList();
+  let activeReportIdx = 0;
+
+  const reportList = document.getElementById('reportList');
+  function renderReportList() {
+    reportList.innerHTML = '';
+    reports.forEach((r, idx) => {
+      const div = document.createElement('div');
+      div.className = 'report-item' + (idx === activeReportIdx ? ' active' : '');
+      div.innerHTML = `
+        <div class="report-item-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/></svg></div>
+        <div>
+          <div class="report-item-title">${r.id}</div>
+          <div class="report-item-sub">Week of ${r.range.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+        </div>
+      `;
+      div.addEventListener('click', () => { activeReportIdx = idx; renderReportList(); renderPreview(); });
+      reportList.appendChild(div);
+    });
+  }
+
+  function renderPreview() {
+    const report = reports[activeReportIdx];
+    const weekStart = new Date(report.range.getTime() - 7 * 86400000);
+    const incidentsInRange = getIncidents().filter(i => {
+      const t = new Date(i.timestamp);
+      return t <= report.range && t >= weekStart;
+    });
+    // guarantee a non-empty preview for demo purposes
+    const rows = (incidentsInRange.length ? incidentsInRange : getIncidents()).slice(0, 8);
+    const counts = { critical: 0, high: 0, medium: 0, low: 0 };
+    rows.forEach(r => counts[r.severity]++);
+
+    document.getElementById('docPreview').innerHTML = `
+      <h2>Incident Summary Report</h2>
+      <div class="doc-sub">${report.id} · ${weekStart.toLocaleDateString()} – ${report.range.toLocaleDateString()} · Generated for ${analystId}</div>
+
+      <div class="doc-summary-grid">
+        <div class="doc-stat"><div class="n">${rows.length}</div><div class="l">Total incidents</div></div>
+        <div class="doc-stat"><div class="n" style="color:#DC2626">${counts.critical}</div><div class="l">Critical</div></div>
+        <div class="doc-stat"><div class="n" style="color:#EA580C">${counts.high}</div><div class="l">High</div></div>
+        <div class="doc-stat"><div class="n" style="color:#B45309">${counts.medium + counts.low}</div><div class="l">Medium / Low</div></div>
+      </div>
+
+      <div class="doc-section-title">Executive summary</div>
+      <p style="font-size:12.5px; line-height:1.7; margin:0;">
+        During this period the detection engine logged ${rows.length} events across brute-force, request-flooding,
+        payload-signature, and behavioral-anomaly detectors. ${counts.critical} incident${counts.critical === 1 ? '' : 's'}
+        reached critical severity and required immediate analyst action. No detector category accounted for a majority
+        of volume, consistent with baseline traffic rather than a single coordinated campaign.
+      </p>
+
+      <div class="doc-section-title">Incidents in this period</div>
+      <table class="doc-table">
+        <thead><tr><th>ID</th><th>Detected</th><th>Type</th><th>Severity</th><th>Source IP</th><th>Status</th></tr></thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td>${r.id}</td>
+              <td>${fmtTime(r.timestamp)}</td>
+              <td>${typeLabel(r.type)}</td>
+              <td style="text-transform:capitalize;">${r.severity}</td>
+              <td>${r.ip}</td>
+              <td style="text-transform:capitalize;">${r.status}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+
+      <div class="doc-foot">ThreatPulse Threat Detection &amp; Incident Response · Confidential — for internal SOC use only</div>
+    `;
+  }
+
+  // TODO(API): POST /api/reports/generate { rangeStart, rangeEnd } -> new report record
+  document.getElementById('newReportBtn').addEventListener('click', () => {
+    reports.unshift({ id: `RPT-2026-${39 + reports.length}`, label: 'Weekly incident summary', range: new Date() });
+    activeReportIdx = 0;
+    renderReportList();
+    renderPreview();
+  });
+
+  // TODO(API): GET /api/reports/{id}/pdf — stream the server-rendered PDF.
+  // Until that endpoint exists, this uses the browser print dialog (Save as PDF)
+  // against the on-screen preview.
+  document.getElementById('downloadBtn').addEventListener('click', () => window.print());
+
+  renderReportList();
+  renderPreview();
+</script>
+</body>
+</html>

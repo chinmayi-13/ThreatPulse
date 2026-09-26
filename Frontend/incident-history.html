@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Incident History · ThreatPulse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .filter-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+  .search-input { max-width: 280px; }
+  .chip-group { display:flex; gap:8px; flex-wrap: wrap; }
+  .filter-select { width: auto; min-width: 150px; }
+  .results-count { font-size: 12.5px; color: var(--text-faint); margin-bottom: 12px; }
+  .pagination { display:flex; align-items:center; justify-content:space-between; margin-top: 16px; font-size:12.5px; color: var(--text-dim); }
+  .pagination .btn-sm[disabled] { opacity: 0.4; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <div class="brand-name">ThreatPulse</div>
+        <div class="brand-sub">SOC Console</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+      <a href="upload.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>Upload &amp; Analyze</a>
+      <a href="incident-history.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Incident History</a>
+      <a href="report.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M9 12h6M9 16h6M9 8h2"/></svg>Reports</a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="analyst">
+        <div class="avatar" id="avatarInitial">A</div>
+        <div>
+          <div class="analyst-name" id="analystNameLabel">Analyst</div>
+          <div class="analyst-role">Tier 2 · SOC</div>
+        </div>
+      </div>
+      
+      <a class="logout-link" href="login.html">Sign out</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">Incident History</h1>
+        <div class="page-sub">Search and filter every incident the detection engine has logged.</div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:18px;">
+      <div class="filter-bar">
+        <input class="input search-input" id="searchInput" placeholder="Search by ID, IP, user, or endpoint…">
+        <select class="input filter-select" id="typeFilter">
+          <option value="">All detection types</option>
+          <option value="brute_force">Brute-force login</option>
+          <option value="dos_flood">Request flooding (DoS/bot)</option>
+          <option value="payload">Suspicious payload (SQLi/XSS)</option>
+          <option value="anomaly">Behavioral anomaly</option>
+        </select>
+        <select class="input filter-select" id="statusFilter">
+          <option value="">All statuses</option>
+          <option value="open">Open</option>
+          <option value="acknowledged">Acknowledged</option>
+          <option value="resolved">Resolved</option>
+        </select>
+        <div class="chip-group" id="severityChips">
+          <span class="chip active" data-sev="">All severities</span>
+          <span class="chip" data-sev="critical">Critical</span>
+          <span class="chip" data-sev="high">High</span>
+          <span class="chip" data-sev="medium">Medium</span>
+          <span class="chip" data-sev="low">Low</span>
+        </div>
+      </div>
+
+      <div class="results-count" id="resultsCount">— incidents</div>
+
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr><th>ID</th><th>Detected</th><th>Type</th><th>Severity</th><th>Source IP</th><th>User</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+
+      <div id="emptyState" class="empty-state" style="display:none;">
+        <h3>No incidents match these filters</h3>
+        <p>Try clearing a filter or searching a different term.</p>
+      </div>
+
+      <div class="pagination">
+        <span id="pageInfo">Page 1</span>
+        <div>
+          <button class="btn btn-ghost btn-sm" id="prevPage">Previous</button>
+          <button class="btn btn-ghost btn-sm" id="nextPage">Next</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="js/common.js"></script>
+<script>
+  const analystId = sessionStorage.getItem('vantage_analyst') || 'j.alvarez';
+  document.getElementById('analystNameLabel').textContent = analystId;
+  document.getElementById('avatarInitial').textContent = analystId.charAt(0).toUpperCase();
+
+  const PAGE_SIZE = 10;
+  let page = 1;
+  let activeSeverity = '';
+
+  const searchInput = document.getElementById('searchInput');
+  const typeFilter = document.getElementById('typeFilter');
+  const statusFilter = document.getElementById('statusFilter');
+  const tableBody = document.getElementById('tableBody');
+  const resultsCount = document.getElementById('resultsCount');
+  const emptyState = document.getElementById('emptyState');
+  const pageInfo = document.getElementById('pageInfo');
+
+  document.getElementById('severityChips').addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    document.querySelectorAll('#severityChips .chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    activeSeverity = chip.dataset.sev;
+    page = 1;
+    render();
+  });
+
+  [searchInput, typeFilter, statusFilter].forEach(el =>
+    el.addEventListener('input', () => { page = 1; render(); })
+  );
+
+  function getFiltered() {
+    // TODO(API): GET /api/incidents?q=&type=&status=&severity=&page=
+    const q = searchInput.value.trim().toLowerCase();
+    return getIncidents().filter(inc => {
+      if (activeSeverity && inc.severity !== activeSeverity) return false;
+      if (typeFilter.value && inc.type !== typeFilter.value) return false;
+      if (statusFilter.value && inc.status !== statusFilter.value) return false;
+      if (q && !(`${inc.id} ${inc.ip} ${inc.user} ${inc.endpoint}`.toLowerCase().includes(q))) return false;
+      return true;
+    });
+  }
+
+  function render() {
+    const filtered = getFiltered();
+    resultsCount.textContent = `${filtered.length} incident${filtered.length === 1 ? '' : 's'}`;
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (page > totalPages) page = totalPages;
+    const slice = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+    tableBody.innerHTML = '';
+    emptyState.style.display = slice.length ? 'none' : 'block';
+
+    slice.forEach(inc => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="mono">${inc.id}</td>
+        <td>${fmtTime(inc.timestamp)}</td>
+        <td>${typeLabel(inc.type)}</td>
+        <td>${severityBadge(inc.severity)}</td>
+        <td class="mono">${inc.ip}</td>
+        <td>${inc.user}</td>
+        <td>${statusBadge(inc.status)}</td>
+        <td style="white-space:nowrap;">
+          <a class="btn btn-ghost btn-sm" href="incident-details.html?id=${inc.id}" onclick="event.stopPropagation()">Edit</a>
+          <button class="icon-btn" title="Delete incident" data-id="${inc.id}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m2 0v13a1 1 0 01-1 1H8a1 1 0 01-1-1V7h10z"/></svg>
+          </button>
+        </td>
+      `;
+      tr.addEventListener('click', () => location.href = `incident-details.html?id=${inc.id}`);
+      tr.querySelector('.icon-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = e.currentTarget.dataset.id;
+        const ok = confirm(`Delete incident ${id}? This cannot be undone.`);
+        if (!ok) return;
+        // TODO(API): DELETE /api/incidents/{id}
+        const all = getIncidents();
+        const idx = all.findIndex(i => i.id === id);
+        if (idx !== -1) all.splice(idx, 1);
+        saveIncidents();
+        render();
+      });
+      tableBody.appendChild(tr);
+    });
+
+    pageInfo.textContent = `Page ${page} of ${totalPages}`;
+    document.getElementById('prevPage').disabled = page <= 1;
+    document.getElementById('nextPage').disabled = page >= totalPages;
+  }
+
+  document.getElementById('prevPage').addEventListener('click', () => { if (page > 1) { page--; render(); } });
+  document.getElementById('nextPage').addEventListener('click', () => { page++; render(); });
+
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,1083 @@
+/* ==========================================================================
+   ThreatPulse — AI Cybersecurity Threat Detection & Incident Response
+   Shared stylesheet for all frontend pages
+   ========================================================================== */
+
+:root {
+  /* ─────────────────────────────────────────────────────────────────────
+     ThreatPulse Background
+     ───────────────────────────────────────────────────────────────────── */
+
+  --bg: #050914;
+  --panel: #0A1220;
+  --panel-raised: #101B2D;
+
+  --border: #1C2C43;
+  --border-soft: #142238;
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Text
+     ───────────────────────────────────────────────────────────────────── */
+
+  --text: #EDF4F7;
+  --text-dim: #91A4B8;
+  --text-faint: #5D7187;
+
+  /* ─────────────────────────────────────────────────────────────────────
+     ThreatPulse Accent — Lime Green
+     ───────────────────────────────────────────────────────────────────── */
+
+  --accent: #B7F34A;
+  --accent-dim: #D2FF78;
+  --accent-bg: rgba(183, 243, 74, 0.10);
+  --accent-ink: #071000;
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Severity
+     ───────────────────────────────────────────────────────────────────── */
+
+  --critical: #FF5364;
+  --critical-bg: rgba(255, 83, 100, 0.12);
+
+  --high: #FF914D;
+  --high-bg: rgba(255, 145, 77, 0.12);
+
+  --medium: #F3C84B;
+  --medium-bg: rgba(243, 200, 75, 0.12);
+
+  --low: #64A8FF;
+  --low-bg: rgba(100, 168, 255, 0.12);
+
+  --safe: #43E6B2;
+  --safe-bg: rgba(67, 230, 178, 0.12);
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Sidebar
+     ───────────────────────────────────────────────────────────────────── */
+
+  --sb-bg: #040812;
+  --sb-bg-raised: #0B1525;
+  --sb-border: #1A2B42;
+
+  --sb-text: #EDF4F7;
+  --sb-text-dim: #91A4B8;
+  --sb-text-faint: #5D7187;
+
+  --sb-accent: #B7F34A;
+  --sb-accent-bg: rgba(183, 243, 74, 0.10);
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Typography
+     ───────────────────────────────────────────────────────────────────── */
+
+  --font-display: 'Space Grotesk', 'IBM Plex Sans', sans-serif;
+  --font-body: 'IBM Plex Sans', -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* ─────────────────────────────────────────────────────────────────────
+     Layout
+     ───────────────────────────────────────────────────────────────────── */
+
+  --sidebar-w: 226px;
+  --radius: 10px;
+  --radius-sm: 6px;
+
+  --shadow-card:
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 10px 30px rgba(0, 0, 0, 0.28);
+}
+
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-padding-top: env(safe-area-inset-top, 0px);
+}
+
+body {
+  margin: 0;
+
+  background:
+    radial-gradient(
+      circle at 82% 0%,
+      rgba(55, 110, 180, 0.14),
+      transparent 27%
+    ),
+    radial-gradient(
+      circle at 15% 90%,
+      rgba(75, 120, 190, 0.06),
+      transparent 30%
+    ),
+    linear-gradient(
+      135deg,
+      #050914 0%,
+      #060C18 45%,
+      #07101C 100%
+    );
+
+  color: var(--text);
+
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+::selection {
+  background: var(--accent);
+  color: #071000;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+
+/* ==========================================================================
+   APP SHELL
+   ========================================================================== */
+
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+
+
+/* ==========================================================================
+   SIDEBAR
+   ========================================================================== */
+
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+
+  background:
+    radial-gradient(
+      circle at 20% 8%,
+      rgba(57, 109, 176, 0.10),
+      transparent 30%
+    ),
+    linear-gradient(
+      180deg,
+      #040812 0%,
+      #050A14 100%
+    );
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 20px 14px;
+
+  position: sticky;
+  top: 0;
+  height: 100vh;
+
+  --panel-raised: var(--sb-bg-raised);
+  --border: var(--sb-border);
+  --border-soft: var(--sb-border);
+  --text: var(--sb-text);
+  --text-dim: var(--sb-text-dim);
+  --text-faint: var(--sb-text-faint);
+  --accent: var(--sb-accent);
+  --accent-bg: var(--sb-accent-bg);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 4px 8px 22px;
+
+  border-bottom: 1px solid var(--border-soft);
+
+  margin-bottom: 18px;
+}
+
+.brand-mark {
+  width: 26px;
+  height: 26px;
+
+  border-radius: 50%;
+
+  border: 2px solid var(--accent);
+
+  position: relative;
+  flex-shrink: 0;
+
+  box-shadow:
+    0 0 10px rgba(183, 243, 74, 0.28),
+    0 0 25px rgba(70, 120, 190, 0.12);
+}
+
+.brand-mark::after {
+  content: '';
+
+  position: absolute;
+
+  width: 4px;
+  height: 4px;
+
+  border-radius: 50%;
+
+  background: var(--accent);
+
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  box-shadow:
+    0 0 8px rgba(183, 243, 74, 0.9);
+}
+
+.brand-name {
+  font-family: var(--font-display);
+
+  font-size: 16px;
+  font-weight: 600;
+
+  color: var(--text);
+}
+
+.brand-sub {
+  font-size: 11px;
+
+  color: var(--text-faint);
+
+  margin-top: 1px;
+}
+
+
+/* ==========================================================================
+   NAVIGATION
+   ========================================================================== */
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav a {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  text-decoration: none;
+
+  color: var(--text-dim);
+
+  padding: 9px 10px;
+
+  border-radius: var(--radius-sm);
+
+  font-size: 13.5px;
+
+  transition:
+    background 0.15s,
+    color 0.15s,
+    transform 0.15s;
+}
+
+.nav a svg {
+  width: 16px;
+  height: 16px;
+
+  flex-shrink: 0;
+}
+
+.nav a:hover {
+  background: var(--panel-raised);
+
+  color: var(--text);
+
+  transform: translateX(2px);
+}
+
+.nav a.active {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(183, 243, 74, 0.13),
+      rgba(183, 243, 74, 0.025)
+    );
+
+  color: var(--accent);
+
+  box-shadow:
+    inset 2px 0 0 var(--accent),
+    0 0 20px rgba(183, 243, 74, 0.035);
+}
+
+
+/* ==========================================================================
+   SIDEBAR PROFILE
+   ========================================================================== */
+
+.sidebar-foot {
+  margin-top: auto;
+
+  border-top: 1px solid var(--border-soft);
+
+  padding-top: 14px;
+}
+
+.analyst {
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 6px 8px;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      #101D30,
+      #172B43
+    );
+
+  border: 1px solid var(--border);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-family: var(--font-display);
+
+  font-size: 12px;
+
+  color: var(--accent);
+
+  flex-shrink: 0;
+
+  box-shadow:
+    0 0 12px rgba(183, 243, 74, 0.06);
+}
+
+.analyst-name {
+  font-size: 13px;
+
+  color: var(--text);
+}
+
+.analyst-role {
+  font-size: 11px;
+
+  color: var(--text-faint);
+}
+
+.logout-link {
+  display: block;
+
+  font-size: 12px;
+
+  color: var(--text-faint);
+
+  text-decoration: none;
+
+  margin-top: 10px;
+
+  padding: 0 8px;
+}
+
+.logout-link:hover {
+  color: var(--text-dim);
+}
+
+
+/* ==========================================================================
+   MAIN CONTENT
+   ========================================================================== */
+
+.main {
+  flex: 1;
+
+  min-width: 0;
+
+  padding: 28px 34px 60px;
+
+  background:
+    radial-gradient(
+      circle at 92% 0%,
+      rgba(55, 105, 175, 0.08),
+      transparent 25%
+    ),
+    radial-gradient(
+      circle at 35% 100%,
+      rgba(30, 70, 120, 0.045),
+      transparent 30%
+    );
+}
+
+.topbar {
+  display: flex;
+
+  align-items: baseline;
+
+  justify-content: space-between;
+
+  margin-bottom: 22px;
+
+  flex-wrap: wrap;
+
+  gap: 10px;
+}
+
+.page-title {
+  font-size: 21px;
+
+  color: var(--text);
+}
+
+.page-sub {
+  color: var(--text-dim);
+
+  font-size: 13px;
+
+  margin-top: 4px;
+}
+
+.live-pill {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  font-size: 12px;
+
+  color: var(--text-dim);
+
+  background:
+    rgba(10, 18, 31, 0.82);
+
+  border: 1px solid var(--border);
+
+  padding: 6px 12px;
+
+  border-radius: 20px;
+
+  backdrop-filter: blur(10px);
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: var(--safe);
+
+  box-shadow:
+    0 0 7px rgba(67, 230, 178, 0.8),
+    0 0 16px rgba(67, 230, 178, 0.3);
+}
+
+
+/* ==========================================================================
+   PANELS / CARDS
+   ========================================================================== */
+
+.panel {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(13, 25, 42, 0.97),
+      rgba(7, 15, 27, 0.98)
+    );
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius);
+
+  padding: 18px;
+
+  box-shadow: var(--shadow-card);
+
+  position: relative;
+
+  overflow: hidden;
+}
+
+.panel::before {
+  content: '';
+
+  position: absolute;
+
+  inset: 0;
+
+  border-radius: inherit;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle at 0% 0%,
+      rgba(74, 128, 205, 0.055),
+      transparent 32%
+    );
+}
+
+.panel-title {
+  font-size: 13px;
+
+  color: var(--text-dim);
+
+  font-weight: 600;
+
+  margin-bottom: 14px;
+}
+
+.grid {
+  display: grid;
+
+  gap: 16px;
+}
+
+
+/* ==========================================================================
+   SEVERITY BADGES
+   ========================================================================== */
+
+.badge {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+  font-size: 12px;
+
+  font-weight: 600;
+
+  padding: 3px 10px;
+
+  border-radius: 20px;
+
+  white-space: nowrap;
+}
+
+.badge::before {
+  content: '';
+
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: currentColor;
+}
+
+.badge-critical {
+  background: var(--critical-bg);
+  color: var(--critical);
+}
+
+.badge-high {
+  background: var(--high-bg);
+  color: var(--high);
+}
+
+.badge-medium {
+  background: var(--medium-bg);
+  color: var(--medium);
+}
+
+.badge-low {
+  background: var(--low-bg);
+  color: var(--low);
+}
+
+.badge-safe {
+  background: var(--safe-bg);
+  color: var(--safe);
+}
+
+.badge-neutral {
+  background: var(--panel-raised);
+
+  color: var(--text-dim);
+}
+
+.badge-neutral::before {
+  display: none;
+}
+
+
+/* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  border-radius: var(--radius-sm);
+
+  padding: 9px 16px;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  border: 1px solid transparent;
+
+  transition:
+    filter 0.12s,
+    background 0.12s,
+    box-shadow 0.12s,
+    transform 0.12s;
+
+  text-decoration: none;
+}
+
+.btn:hover {
+  filter: brightness(1.08);
+
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  filter: brightness(0.95);
+
+  transform: translateY(0);
+}
+
+.btn-primary {
+  background: var(--accent);
+
+  color: var(--accent-ink);
+
+  box-shadow:
+    0 1px 2px rgba(183, 243, 74, 0.25),
+    0 0 18px rgba(183, 243, 74, 0.08);
+}
+
+.btn-secondary {
+  background: var(--panel-raised);
+
+  color: var(--text);
+
+  border-color: var(--border);
+}
+
+.btn-ghost {
+  background: transparent;
+
+  color: var(--text-dim);
+
+  border-color: var(--border);
+}
+
+.btn-danger {
+  background: var(--critical-bg);
+
+  color: var(--critical);
+
+  border-color: rgba(255, 83, 100, 0.25);
+}
+
+.btn-safe {
+  background: var(--safe-bg);
+
+  color: var(--safe);
+
+  border-color: rgba(67, 230, 178, 0.25);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+
+  cursor: not-allowed;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+
+  font-size: 12px;
+}
+
+
+/* ==========================================================================
+   ICON BUTTONS
+   ========================================================================== */
+
+.icon-btn {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+
+  border-radius: var(--radius-sm);
+
+  border: 1px solid var(--border);
+
+  background: var(--panel-raised);
+
+  color: var(--text-dim);
+
+  cursor: pointer;
+}
+
+.icon-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.icon-btn:hover {
+  color: var(--critical);
+
+  border-color: rgba(255, 83, 100, 0.3);
+
+  background: var(--critical-bg);
+}
+
+
+/* ==========================================================================
+   FORMS
+   ========================================================================== */
+
+.edit-field-grid {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 14px 20px;
+
+  margin-bottom: 14px;
+}
+
+.field {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 6px;
+
+  margin-bottom: 16px;
+}
+
+.field label {
+  font-size: 12.5px;
+
+  color: var(--text-dim);
+}
+
+.input,
+select.input {
+  background:
+    linear-gradient(
+      145deg,
+      #0B1728,
+      #08121F
+    );
+
+  border: 1px solid var(--border);
+
+  color: var(--text);
+
+  border-radius: var(--radius-sm);
+
+  padding: 10px 12px;
+
+  font-size: 13.5px;
+
+  width: 100%;
+
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--accent);
+
+  box-shadow:
+    0 0 0 2px rgba(183, 243, 74, 0.07),
+    0 0 16px rgba(183, 243, 74, 0.035);
+}
+
+.input::placeholder {
+  color: var(--text-faint);
+}
+
+
+/* ==========================================================================
+   TABLES
+   ========================================================================== */
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table.data {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  font-size: 13px;
+
+  min-width: 680px;
+}
+
+table.data th {
+  text-align: left;
+
+  color: var(--text-faint);
+
+  font-weight: 600;
+
+  font-size: 11.5px;
+
+  padding: 0 12px 10px;
+
+  border-bottom: 1px solid var(--border);
+}
+
+table.data td {
+  padding: 12px;
+
+  border-bottom: 1px solid var(--border-soft);
+
+  vertical-align: middle;
+}
+
+table.data tbody tr {
+  cursor: pointer;
+
+  transition:
+    background 0.12s,
+    transform 0.12s;
+}
+
+table.data tbody tr:hover {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(183, 243, 74, 0.035),
+      rgba(72, 119, 181, 0.025)
+    );
+}
+
+table.data tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.mono {
+  font-family: var(--font-mono);
+
+  font-size: 12.5px;
+
+  color: var(--text-dim);
+}
+
+
+/* ==========================================================================
+   STATISTICS
+   ========================================================================== */
+
+.stat-value {
+  font-family: var(--font-display);
+
+  font-size: 30px;
+
+  color: var(--text);
+}
+
+.stat-label {
+  font-size: 12px;
+
+  color: var(--text-dim);
+
+  margin-top: 2px;
+
+  font-weight: 600;
+}
+
+.stat-delta {
+  font-size: 11.5px;
+
+  margin-top: 6px;
+}
+
+
+/* ==========================================================================
+   UTILITIES
+   ========================================================================== */
+
+.hairline {
+  border: none;
+
+  border-top: 1px solid var(--border-soft);
+
+  margin: 18px 0;
+}
+
+.chip {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+  font-size: 12px;
+
+  padding: 5px 11px;
+
+  border-radius: 20px;
+
+  border: 1px solid var(--border);
+
+  background: var(--panel-raised);
+
+  color: var(--text-dim);
+
+  cursor: pointer;
+}
+
+.chip.active {
+  background: var(--accent-bg);
+
+  color: var(--accent);
+
+  border-color: var(--accent-dim);
+}
+
+.empty-state {
+  text-align: center;
+
+  padding: 50px 20px;
+
+  color: var(--text-dim);
+}
+
+.empty-state h3 {
+  color: var(--text);
+
+  margin-bottom: 6px;
+
+  font-size: 15px;
+}
+
+.empty-state p {
+  font-size: 13px;
+
+  margin: 0;
+}
+
+.scroll-x {
+  overflow-x: auto;
+}
+
+
+/* ==========================================================================
+   ThreatPulse GLOW DETAILS
+   ========================================================================== */
+
+.main::after {
+  content: '';
+
+  position: fixed;
+
+  width: 420px;
+  height: 420px;
+
+  right: -180px;
+  bottom: -180px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(61, 113, 185, 0.055) 0%,
+      rgba(61, 113, 185, 0.02) 35%,
+      transparent 70%
+    );
+
+  pointer-events: none;
+
+  z-index: 0;
+}
+
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 860px) {
+
+  .sidebar {
+    display: none;
+  }
+
+  .main {
+    padding: 18px;
+  }
+
+  .edit-field-grid {
+    grid-template-columns: 1fr;
+  }
+}

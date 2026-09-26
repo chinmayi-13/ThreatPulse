@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Incident Details · ThreatPulse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .detail-grid { grid-template-columns: 1.6fr 1fr; align-items: start; }
+  @media (max-width: 980px) { .detail-grid { grid-template-columns: 1fr; } }
+
+  .kv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; }
+  .kv-label { font-size: 11.5px; color: var(--text-faint); margin-bottom: 3px; }
+  .kv-value { font-size: 13.5px; }
+
+  .explain-block {
+    background: var(--panel-raised);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .action-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .action-list li { display: flex; gap: 10px; font-size: 13px; align-items: flex-start; }
+  .action-list li svg { width: 15px; height:15px; margin-top:2px; color: var(--accent); flex-shrink:0; }
+
+  .log-excerpt {
+    background: #0B1119;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: #9FD3A8;
+    overflow-x: auto;
+    white-space: pre;
+    line-height: 1.7;
+  }
+
+  .header-flex { display:flex; align-items:flex-start; justify-content:space-between; gap: 16px; flex-wrap: wrap; }
+  .id-line { font-family: var(--font-mono); color: var(--text-faint); font-size: 12.5px; margin-bottom: 6px; }
+  .action-buttons { display:flex; gap:10px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <div class="brand-name">ThreatPulse</div>
+        <div class="brand-sub">SOC Console</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+      <a href="upload.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>Upload &amp; Analyze</a>
+      <a href="incident-history.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Incident History</a>
+      <a href="report.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M9 12h6M9 16h6M9 8h2"/></svg>Reports</a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="analyst">
+        <div class="avatar" id="avatarInitial">A</div>
+        <div>
+          <div class="analyst-name" id="analystNameLabel">Analyst</div>
+          <div class="analyst-role">Tier 2 · SOC</div>
+        </div>
+      </div>
+      
+      <a class="logout-link" href="login.html">Sign out</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div style="margin-bottom:14px;">
+      <a href="incident-history.html" style="font-size:12.5px; color:var(--text-dim); text-decoration:none;">&larr; Back to Incident History</a>
+    </div>
+
+    <div class="topbar header-flex">
+      <div>
+        <div class="id-line" id="incId">INC-—</div>
+        <h1 class="page-title" id="incTitle">Loading incident…</h1>
+        <div class="page-sub" id="incMeta"></div>
+      </div>
+      <div class="action-buttons">
+        <button class="btn btn-secondary" id="editBtn">Edit</button>
+        <button class="btn btn-secondary" id="ackBtn">Acknowledge</button>
+        <button class="btn btn-secondary" id="escalateBtn">Escalate</button>
+        <button class="btn btn-safe" id="resolveBtn">Mark resolved</button>
+        <button class="btn btn-danger" id="deleteBtn">Delete</button>
+      </div>
+    </div>
+
+    <div class="panel" id="editPanel" style="display:none; margin-bottom:16px;">
+      <div class="panel-title">Edit incident</div>
+      <div class="edit-field-grid">
+        <div class="field" style="margin-bottom:0;">
+          <label for="editSeverity">Severity</label>
+          <select class="input" id="editSeverity">
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label for="editStatus">Status</label>
+          <select class="input" id="editStatus">
+            <option value="open">Open</option>
+            <option value="acknowledged">Acknowledged</option>
+            <option value="resolved">Resolved</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="editDetail">Finding summary</label>
+        <input class="input" id="editDetail" placeholder="Short description of what was detected">
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-primary btn-sm" id="saveEditBtn">Save changes</button>
+        <button class="btn btn-ghost btn-sm" id="cancelEditBtn">Cancel</button>
+      </div>
+    </div>
+
+    <div class="grid detail-grid">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div class="panel">
+          <div class="panel-title">Detection details</div>
+          <div class="kv-grid">
+            <div><div class="kv-label">Threat type</div><div class="kv-value" id="kvType">—</div></div>
+            <div><div class="kv-label">Detection method</div><div class="kv-value" id="kvMethod">—</div></div>
+            <div><div class="kv-label">Severity</div><div class="kv-value" id="kvSeverity">—</div></div>
+            <div><div class="kv-label">Status</div><div class="kv-value" id="kvStatus">—</div></div>
+            <div><div class="kv-label">Source IP</div><div class="kv-value mono" id="kvIp">—</div></div>
+            <div><div class="kv-label">Geo / region</div><div class="kv-value" id="kvGeo">—</div></div>
+            <div><div class="kv-label">Account</div><div class="kv-value" id="kvUser">—</div></div>
+            <div><div class="kv-label">Endpoint</div><div class="kv-value mono" id="kvEndpoint">—</div></div>
+            <div><div class="kv-label">Detected at</div><div class="kv-value" id="kvTime">—</div></div>
+            <div><div class="kv-label">Anomaly score</div><div class="kv-value" id="kvScore">—</div></div>
+            <div style="grid-column: 1 / -1;"><div class="kv-label">Finding summary</div><div class="kv-value" id="kvDetail">—</div></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">AI explanation</div>
+          <div class="explain-block" id="aiExplain">—</div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Raw log excerpt</div>
+          <div class="log-excerpt" id="logExcerpt">—</div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div class="panel">
+          <div class="panel-title">Recommended action</div>
+          <ul class="action-list" id="actionList"></ul>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Case notes</div>
+          <textarea class="input" id="caseNotes" rows="5" placeholder="Add investigation notes for this incident…"></textarea>
+          <button class="btn btn-secondary btn-sm" id="saveNoteBtn" style="margin-top:10px;">Save note</button>
+          <div id="noteSaved" style="display:none; font-size:11.5px; color:var(--safe); margin-top:8px;">Note saved.</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="js/common.js"></script>
+<script>
+  const analystId = sessionStorage.getItem('vantage_analyst') || 'j.alvarez';
+  document.getElementById('analystNameLabel').textContent = analystId;
+  document.getElementById('avatarInitial').textContent = analystId.charAt(0).toUpperCase();
+
+  const params = new URLSearchParams(location.search);
+  const incId = params.get('id');
+  // TODO(API): GET /api/incidents/{id}
+  const incident = getIncidents().find(i => i.id === incId) || getIncidents()[0];
+
+  document.getElementById('incId').textContent = incident.id;
+  document.getElementById('incTitle').textContent = typeLabel(incident.type);
+  document.getElementById('incMeta').textContent = `Flagged ${relTime(incident.timestamp)} · ${fmtTime(incident.timestamp)}`;
+
+  document.getElementById('kvType').textContent = typeLabel(incident.type);
+  document.getElementById('kvMethod').textContent = THREAT_TYPES[incident.type].method;
+  document.getElementById('kvSeverity').innerHTML = severityBadge(incident.severity);
+  document.getElementById('kvStatus').innerHTML = statusBadge(incident.status);
+  document.getElementById('kvIp').textContent = incident.ip;
+  document.getElementById('kvGeo').textContent = incident.geo;
+  document.getElementById('kvUser').textContent = incident.user;
+  document.getElementById('kvEndpoint').textContent = incident.endpoint;
+  document.getElementById('kvTime').textContent = fmtTime(incident.timestamp);
+  document.getElementById('kvScore').textContent = incident.type === 'anomaly' ? incident.score : '—';
+  document.getElementById('kvDetail').textContent = incident.detail;
+
+  document.getElementById('aiExplain').textContent = incident.aiExplanation;
+
+  const logLines = [
+    `${incident.timestamp}  src=${incident.ip}  user=${incident.user}  geo=${incident.geo}`,
+    `${incident.timestamp}  ${incident.endpoint}  method=POST  status=401`,
+    incident.type === 'payload' ? `${incident.timestamp}  param=q  value="${incident.detail}"` : `${incident.timestamp}  detail="${incident.detail}"`,
+    `${incident.timestamp}  detector=${THREAT_TYPES[incident.type].method}  match=true`,
+  ];
+  document.getElementById('logExcerpt').textContent = logLines.join('\n');
+
+  const actionList = document.getElementById('actionList');
+  RECOMMENDED_ACTIONS[incident.type].forEach(a => {
+    const li = document.createElement('li');
+    li.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg><span>${a}</span>`;
+    actionList.appendChild(li);
+  });
+
+  // TODO(API): PATCH /api/incidents/{id} { status: 'acknowledged'|'resolved'|'escalated' }
+  function setStatus(newStatus) {
+    incident.status = newStatus;
+    document.getElementById('kvStatus').innerHTML = statusBadge(incident.status);
+    saveIncidents();
+  }
+  document.getElementById('ackBtn').addEventListener('click', () => setStatus('acknowledged'));
+  document.getElementById('resolveBtn').addEventListener('click', () => setStatus('resolved'));
+  document.getElementById('escalateBtn').addEventListener('click', () => {
+    setStatus('acknowledged');
+    alert('Incident escalated to Tier 3 on-call.');
+  });
+
+  // --- Update (edit) ---------------------------------------------------
+  const editPanel = document.getElementById('editPanel');
+  const editBtn = document.getElementById('editBtn');
+  editBtn.addEventListener('click', () => {
+    document.getElementById('editSeverity').value = incident.severity;
+    document.getElementById('editStatus').value = incident.status;
+    document.getElementById('editDetail').value = incident.detail;
+    editPanel.style.display = editPanel.style.display === 'none' ? 'block' : 'none';
+  });
+  document.getElementById('cancelEditBtn').addEventListener('click', () => {
+    editPanel.style.display = 'none';
+  });
+  // TODO(API): PATCH /api/incidents/{id} { severity, status, detail }
+  document.getElementById('saveEditBtn').addEventListener('click', () => {
+    incident.severity = document.getElementById('editSeverity').value;
+    incident.status = document.getElementById('editStatus').value;
+    incident.detail = document.getElementById('editDetail').value.trim() || incident.detail;
+    document.getElementById('kvSeverity').innerHTML = severityBadge(incident.severity);
+    document.getElementById('kvStatus').innerHTML = statusBadge(incident.status);
+    document.getElementById('kvDetail').textContent = incident.detail;
+    editPanel.style.display = 'none';
+    saveIncidents();
+  });
+
+  // --- Delete ------------------------------------------------------------
+  // TODO(API): DELETE /api/incidents/{id}
+  document.getElementById('deleteBtn').addEventListener('click', () => {
+    const ok = confirm(`Delete incident ${incident.id}? This cannot be undone.`);
+    if (!ok) return;
+    const all = getIncidents();
+    const idx = all.findIndex(i => i.id === incident.id);
+    if (idx !== -1) all.splice(idx, 1);
+    saveIncidents();
+    window.location.href = 'incident-history.html';
+  });
+
+  // TODO(API): POST /api/incidents/{id}/notes { text }
+  document.getElementById('saveNoteBtn').addEventListener('click', () => {
+    const note = document.getElementById('noteSaved');
+    note.style.display = 'block';
+    setTimeout(() => note.style.display = 'none', 2500);
+  });
+</script>
+</body>
+</html>

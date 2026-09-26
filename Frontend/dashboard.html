@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dashboard · ThreatPulse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  .stat-row { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 900px) { .stat-row { grid-template-columns: repeat(2, 1fr); } }
+  .stat-card { display: flex; flex-direction: column; }
+  .stat-icon-row { display:flex; align-items:center; justify-content:space-between; margin-bottom: 10px;}
+
+  .charts-row { grid-template-columns: 1.3fr 1fr; }
+  @media (max-width: 980px) { .charts-row { grid-template-columns: 1fr; } }
+
+  .summary-panel { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .summary-icon {
+    width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+    background: var(--accent-bg); color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .summary-icon svg { width: 22px; height: 22px; }
+  .summary-text { flex: 1; min-width: 220px; font-size: 13px; color: var(--text-dim); max-width: 62ch; }
+
+  .recent-list { display: flex; flex-direction: column; }
+  .recent-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .recent-item:last-child { border-bottom: none; }
+  .recent-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .recent-text { flex: 1; min-width: 0; }
+  .recent-title { font-size: 13px; }
+  .recent-meta { font-size: 11.5px; color: var(--text-faint); margin-top: 1px; }
+  .recent-time { font-size: 11.5px; color: var(--text-faint); white-space: nowrap; }
+
+  canvas { max-width: 100%; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <div class="brand-name">ThreatPulse</div>
+        <div class="brand-sub">SOC Console</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+      <a href="upload.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>Upload &amp; Analyze</a>
+      <a href="incident-history.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Incident History</a>
+      <a href="report.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M9 12h6M9 16h6M9 8h2"/></svg>Reports</a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="analyst">
+        <div class="avatar" id="avatarInitial">A</div>
+        <div>
+          <div class="analyst-name" id="analystNameLabel">Analyst</div>
+          <div class="analyst-role">Tier 2 · SOC</div>
+        </div>
+      </div>
+      
+      <a class="logout-link" href="login.html" id="logoutLink">Sign out</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">Dashboard</h1>
+        <div class="page-sub">Live overview of detection activity across monitored sources.</div>
+      </div>
+      <div class="live-pill"><span class="live-dot"></span> Detection engine active</div>
+    </div>
+
+    <div class="grid stat-row" style="margin-bottom:16px;">
+      <div class="panel stat-card">
+        <div class="stat-icon-row"><div class="stat-label">Open incidents</div></div>
+        <div class="stat-value" id="statOpen">—</div>
+        <div class="stat-delta" style="color:var(--text-faint)">across all severities</div>
+      </div>
+      <div class="panel stat-card">
+        <div class="stat-icon-row"><div class="stat-label">Critical</div></div>
+        <div class="stat-value" id="statCritical" style="color:var(--critical)">—</div>
+        <div class="stat-delta" style="color:var(--text-faint)">needs immediate action</div>
+      </div>
+      <div class="panel stat-card">
+        <div class="stat-icon-row"><div class="stat-label">High</div></div>
+        <div class="stat-value" id="statHigh" style="color:var(--high)">—</div>
+        <div class="stat-delta" style="color:var(--text-faint)">brute-force &amp; DoS patterns</div>
+      </div>
+      <div class="panel stat-card">
+        <div class="stat-icon-row"><div class="stat-label">Resolved (7d)</div></div>
+        <div class="stat-value" id="statResolved" style="color:var(--safe)">—</div>
+        <div class="stat-delta" style="color:var(--text-faint)">closed by analysts</div>
+      </div>
+    </div>
+
+    <div class="panel summary-panel" style="margin-bottom:16px;">
+      <div class="summary-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7z"/><path d="M9 12l2 2 4-4"/></svg>
+      </div>
+      <div class="summary-text">
+        <strong style="color:var(--text);">Last 24 hours: </strong><span id="heroSummary">Loading…</span>
+      </div>
+    </div>
+
+    <div class="grid charts-row" style="margin-bottom:16px;">
+      <div class="panel">
+        <div class="panel-title">Events over time</div>
+        <canvas id="timelineChart" height="90"></canvas>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Severity breakdown</div>
+        <canvas id="severityChart" height="90"></canvas>
+      </div>
+    </div>
+
+    <div class="grid charts-row">
+      <div class="panel">
+        <div class="panel-title">Recent activity</div>
+        <div class="recent-list" id="recentList"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Detection pattern mix</div>
+        <canvas id="typeChart" height="140"></canvas>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="js/common.js"></script>
+<script>
+  const analystId = sessionStorage.getItem('vantage_analyst') || 'j.alvarez';
+  document.getElementById('analystNameLabel').textContent = analystId;
+  document.getElementById('avatarInitial').textContent = analystId.charAt(0).toUpperCase();
+
+  const incidents = getIncidents();
+  const open = incidents.filter(i => i.status === 'open').length;
+  const critical = incidents.filter(i => i.severity === 'critical' && i.status !== 'resolved').length;
+  const high = incidents.filter(i => i.severity === 'high' && i.status !== 'resolved').length;
+  const resolved7d = incidents.filter(i => i.status === 'resolved' && (Date.now() - new Date(i.timestamp)) < 7 * 86400000).length;
+
+  document.getElementById('statOpen').textContent = open;
+  document.getElementById('statCritical').textContent = critical;
+  document.getElementById('statHigh').textContent = high;
+  document.getElementById('statResolved').textContent = resolved7d;
+
+  const last24h = incidents.filter(i => Date.now() - new Date(i.timestamp) < 86400000);
+  document.getElementById('heroSummary').textContent =
+    `${last24h.length} events flagged across brute-force, flooding, payload, and anomaly detectors. ${critical} require attention now.`;
+
+  // Recent activity list
+  const recentList = document.getElementById('recentList');
+  const sevColor = { critical: 'var(--critical)', high: 'var(--high)', medium: 'var(--medium)', low: 'var(--low)' };
+  incidents.slice(0, 6).forEach(inc => {
+    const div = document.createElement('div');
+    div.className = 'recent-item';
+    div.innerHTML = `
+      <div class="recent-dot" style="background:${sevColor[inc.severity]}"></div>
+      <div class="recent-text">
+        <div class="recent-title">${typeLabel(inc.type)} · <span class="mono">${inc.ip}</span></div>
+        <div class="recent-meta">${inc.id} · ${SEVERITY_META[inc.severity].label}</div>
+      </div>
+      <div class="recent-time">${relTime(inc.timestamp)}</div>
+    `;
+    div.addEventListener('click', () => location.href = `incident-details.html?id=${inc.id}`);
+    recentList.appendChild(div);
+  });
+
+  // Chart.js global styling to match theme
+  Chart.defaults.color = '#5B6478';
+  Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
+  Chart.defaults.borderColor = '#ECEFF8';
+
+  // Timeline chart — events per day, last 14 days
+  const days = [];
+  const dayCounts = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 86400000);
+    const label = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    days.push(label);
+    const count = incidents.filter(inc => {
+      const t = new Date(inc.timestamp);
+      return t.toDateString() === d.toDateString();
+    }).length;
+    dayCounts.push(count);
+  }
+  new Chart(document.getElementById('timelineChart'), {
+    type: 'line',
+    data: {
+      labels: days,
+      datasets: [{
+        data: dayCounts,
+        borderColor: '#0D9488',
+        backgroundColor: 'rgba(13,148,136,0.10)',
+        fill: true,
+        tension: 0.35,
+        pointRadius: 0,
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: '#ECEFF8' }, beginAtZero: true, ticks: { precision: 0 } }
+      }
+    }
+  });
+
+  // Severity donut
+  const sevCounts = SEVERITY_ORDER.map(s => incidents.filter(i => i.severity === s).length);
+  new Chart(document.getElementById('severityChart'), {
+    type: 'doughnut',
+    data: {
+      labels: SEVERITY_ORDER.map(s => SEVERITY_META[s].label),
+      datasets: [{
+        data: sevCounts,
+        backgroundColor: ['#DC2626', '#EA580C', '#B45309', '#2563EB'],
+        borderColor: '#FFFFFF',
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      cutout: '68%',
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 14, font: { size: 11.5 } } } }
+    }
+  });
+
+  // Threat pattern mix — horizontal bar, one color per detector so the
+  // rule-based patterns (red/orange/amber) stand apart from the ML-based one (teal)
+  const typeKeys = Object.keys(THREAT_TYPES);
+  const typeCounts = typeKeys.map(t => incidents.filter(i => i.type === t).length);
+  const typeColors = { brute_force: '#DC2626', dos_flood: '#EA580C', payload: '#B45309', anomaly: '#0D9488' };
+  new Chart(document.getElementById('typeChart'), {
+    type: 'bar',
+    data: {
+      labels: typeKeys.map(t => THREAT_TYPES[t].label),
+      datasets: [{
+        data: typeCounts,
+        backgroundColor: typeKeys.map(t => typeColors[t]),
+        borderRadius: 4,
+        maxBarThickness: 22,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#ECEFF8' }, beginAtZero: true, ticks: { precision: 0 } },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+
+  document.getElementById('logoutLink').addEventListener('click', () => sessionStorage.removeItem('vantage_analyst'));
+</script>
+</body>
+</html>

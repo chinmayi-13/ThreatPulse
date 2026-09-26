@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Upload &amp; Analyze · ThreatPulse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .dropzone {
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 46px 20px;
+    text-align: center;
+    transition: border-color 0.15s, background 0.15s;
+    cursor: pointer;
+  }
+  .dropzone.drag { border-color: var(--accent); background: var(--accent-bg); }
+  .dropzone svg { width: 34px; height: 34px; color: var(--text-faint); margin-bottom: 12px; }
+  .dropzone-title { font-size: 14px; margin-bottom: 4px; }
+  .dropzone-sub { font-size: 12.5px; color: var(--text-faint); }
+  #fileInput { display: none; }
+
+  .file-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    background: var(--panel-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-top: 14px;
+    display: none;
+  }
+  .file-row.show { display: flex; }
+  .file-icon { width: 30px; height: 30px; border-radius: 6px; background: var(--accent-bg); color: var(--accent); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .file-meta-name { font-size: 13px; }
+  .file-meta-size { font-size: 11.5px; color: var(--text-faint); }
+  .file-remove { margin-left: auto; color: var(--text-faint); cursor: pointer; font-size: 12px; }
+
+  .progress-wrap { display: none; margin-top: 18px; }
+  .progress-wrap.show { display: block; }
+  .progress-label { display:flex; justify-content:space-between; font-size:12px; color:var(--text-dim); margin-bottom:8px; }
+  .progress-track { height: 6px; background: var(--panel-raised); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+  .progress-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.25s ease; }
+  .progress-steps { display:flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
+  .progress-step { font-size: 11.5px; color: var(--text-faint); display:flex; align-items:center; gap:6px; }
+  .progress-step.done { color: var(--safe); }
+  .progress-step.active { color: var(--accent); }
+  .step-dot { width:6px; height:6px; border-radius:50%; background: currentColor; }
+
+  .results-summary { display: none; }
+  .results-summary.show { display: block; }
+  .summary-row { display:flex; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+  .summary-chip { background: var(--panel-raised); border:1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; min-width: 120px; }
+  .summary-chip .n { font-family: var(--font-display); font-size: 20px; }
+  .summary-chip .l { font-size: 11.5px; color: var(--text-faint); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <div class="brand-name">ThreatPulse</div>
+        <div class="brand-sub">SOC Console</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+      <a href="upload.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>Upload &amp; Analyze</a>
+      <a href="incident-history.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Incident History</a>
+      <a href="report.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M9 12h6M9 16h6M9 8h2"/></svg>Reports</a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="analyst">
+        <div class="avatar" id="avatarInitial">A</div>
+        <div>
+          <div class="analyst-name" id="analystNameLabel">Analyst</div>
+          <div class="analyst-role">Tier 2 · SOC</div>
+        </div>
+      </div>
+      
+      <a class="logout-link" href="login.html">Sign out</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">Upload &amp; Analyze</h1>
+        <div class="page-sub">Submit a log CSV for rule-based and behavioral (Isolation Forest) analysis.</div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:18px;">
+      <div class="panel-title">Log file</div>
+      <div class="dropzone" id="dropzone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="margin:0 auto 12px; display:block;"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+        <div class="dropzone-title">Drag a CSV file here, or click to browse</div>
+        <div class="dropzone-sub">Expected columns: timestamp, source_ip, user, endpoint, status_code, user_agent</div>
+      </div>
+      <input type="file" id="fileInput" accept=".csv">
+
+      <div class="file-row" id="fileRow">
+        <div class="file-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/></svg>
+        </div>
+        <div>
+          <div class="file-meta-name" id="fileName">—</div>
+          <div class="file-meta-size" id="fileSize">—</div>
+        </div>
+        <span class="file-remove" id="fileRemove">Remove</span>
+      </div>
+
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-label"><span id="progressLabel">Uploading…</span><span id="progressPct">0%</span></div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-steps">
+          <div class="progress-step" id="step1"><span class="step-dot"></span>Parsing CSV</div>
+          <div class="progress-step" id="step2"><span class="step-dot"></span>Rule-based scan</div>
+          <div class="progress-step" id="step3"><span class="step-dot"></span>Isolation Forest scoring</div>
+          <div class="progress-step" id="step4"><span class="step-dot"></span>Writing incidents</div>
+        </div>
+      </div>
+
+      <div style="margin-top:18px; display:flex; gap:10px;">
+        <button class="btn btn-primary" id="analyzeBtn" disabled>Analyze log file</button>
+        <button class="btn btn-ghost" id="sampleBtn">Use synthetic sample instead</button>
+      </div>
+    </div>
+
+    <div class="panel results-summary" id="resultsPanel">
+      <div class="panel-title">Analysis results</div>
+      <div class="summary-row" id="summaryRow"></div>
+      <div class="table-wrap">
+        <table class="data" id="resultsTable">
+          <thead><tr><th>Detection</th><th>Type</th><th>Severity</th><th>Source IP</th><th>Detail</th></tr></thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:16px;">
+        <a class="btn btn-secondary" href="incident-history.html">View in Incident History</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="js/common.js"></script>
+<script>
+  const analystId = sessionStorage.getItem('vantage_analyst') || 'j.alvarez';
+  document.getElementById('analystNameLabel').textContent = analystId;
+  document.getElementById('avatarInitial').textContent = analystId.charAt(0).toUpperCase();
+
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const fileRow = document.getElementById('fileRow');
+  const fileName = document.getElementById('fileName');
+  const fileSize = document.getElementById('fileSize');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  let selectedFile = null;
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('drag');
+    if (e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', () => { if (fileInput.files.length) setFile(fileInput.files[0]); });
+
+  function setFile(file) {
+    selectedFile = file;
+    fileName.textContent = file.name;
+    fileSize.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+    fileRow.classList.add('show');
+    analyzeBtn.disabled = false;
+  }
+
+  document.getElementById('fileRemove').addEventListener('click', (e) => {
+    e.stopPropagation();
+    selectedFile = null;
+    fileRow.classList.remove('show');
+    fileInput.value = '';
+    analyzeBtn.disabled = true;
+  });
+
+  document.getElementById('sampleBtn').addEventListener('click', () => {
+    setFile(new File([''], 'synthetic_log_sample_2026-09-22.csv'));
+  });
+
+  // TODO(API): POST /api/logs/analyze (multipart form, field name "file")
+  // Java servlet streams the CSV to the Flask AI service, which runs the
+  // rule engine + Isolation Forest and returns detected events. Replace
+  // runAnalysis() below with the real request/response handling — keep
+  // the resulting incident shape consistent with common.js so the results
+  // table and downstream pages (Incident Details/History) don't change.
+  analyzeBtn.addEventListener('click', runAnalysis);
+
+  function runAnalysis() {
+    analyzeBtn.disabled = true;
+    document.getElementById('progressWrap').classList.add('show');
+    document.getElementById('resultsPanel').classList.remove('show');
+
+    const steps = ['step1', 'step2', 'step3', 'step4'];
+    const fill = document.getElementById('progressFill');
+    const pct = document.getElementById('progressPct');
+    const label = document.getElementById('progressLabel');
+    const labels = ['Parsing CSV rows…', 'Running rule-based signatures…', 'Scoring sessions with Isolation Forest…', 'Writing incidents to database…'];
+
+    let i = 0;
+    steps.forEach(s => document.getElementById(s).classList.remove('active', 'done'));
+
+    function nextStep() {
+      if (i > 0) document.getElementById(steps[i - 1]).classList.replace('active', 'done');
+      if (i >= steps.length) {
+        fill.style.width = '100%';
+        pct.textContent = '100%';
+        label.textContent = 'Analysis complete';
+        showResults();
+        analyzeBtn.disabled = false;
+        return;
+      }
+      document.getElementById(steps[i]).classList.add('active');
+      label.textContent = labels[i];
+      const target = Math.round(((i + 1) / steps.length) * 100);
+      fill.style.width = target + '%';
+      pct.textContent = target + '%';
+      i++;
+      setTimeout(nextStep, 550);
+    }
+    nextStep();
+  }
+
+  function showResults() {
+    // Mock: pull a fresh slice of generated incidents to represent "this run"
+    const batch = generateIncidents(9, Math.floor(Math.random() * 10000));
+    const counts = { critical: 0, high: 0, medium: 0, low: 0 };
+    batch.forEach(b => counts[b.severity]++);
+
+    const summaryRow = document.getElementById('summaryRow');
+    summaryRow.innerHTML = `
+      <div class="summary-chip"><div class="n">${batch.length}</div><div class="l">Events flagged</div></div>
+      <div class="summary-chip"><div class="n" style="color:var(--critical)">${counts.critical}</div><div class="l">Critical</div></div>
+      <div class="summary-chip"><div class="n" style="color:var(--high)">${counts.high}</div><div class="l">High</div></div>
+      <div class="summary-chip"><div class="n" style="color:var(--medium)">${counts.medium}</div><div class="l">Medium</div></div>
+      <div class="summary-chip"><div class="n" style="color:var(--low)">${counts.low}</div><div class="l">Low</div></div>
+    `;
+
+    const body = document.getElementById('resultsBody');
+    body.innerHTML = '';
+    batch.forEach(inc => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${inc.id}</td>
+        <td>${typeLabel(inc.type)}<div style="font-size:11px;color:var(--text-faint)">${THREAT_TYPES[inc.type].method}</div></td>
+        <td>${severityBadge(inc.severity)}</td>
+        <td class="mono">${inc.ip}</td>
+        <td style="max-width:320px;">${inc.detail}</td>
+      `;
+      tr.addEventListener('click', () => location.href = `incident-details.html?id=${inc.id}`);
+      body.appendChild(tr);
+    });
+
+    // merge into the shared incident store so History/Details can find them
+    window.__VANTAGE_INCIDENTS__ = batch.concat(getIncidents());
+    saveIncidents();
+
+    document.getElementById('resultsPanel').classList.add('show');
+  }
+</script>
+</body>
+</html>
